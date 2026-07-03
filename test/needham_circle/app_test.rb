@@ -81,6 +81,24 @@ module NeedhamCircle
       super(path, params, rack_env.merge("REMOTE_ADDR" => @test_ip))
     end
 
+    def test_home_page_renders_welcome_and_linked_boxes
+      get "/"
+      assert_equal 200, last_response.status
+      assert_includes last_response.body, "Welcome to Needham Circle"
+      # The landing page uses the wide content card.
+      assert_includes last_response.body, %(<body class="wide">)
+      # The three content boxes link to the sections they describe.
+      assert_match(%r{href="/events"[^>]*>View Events}, last_response.body)
+      assert_match(%r{href="/submit"[^>]*>Submit an Event}, last_response.body)
+      assert_match(%r{href="/contact"[^>]*>Contact Us}, last_response.body)
+    end
+
+    def test_about_page_renders
+      get "/about"
+      assert_equal 200, last_response.status
+      assert_includes last_response.body, "About Needham Circle"
+    end
+
     def test_index_renders_events_from_calendar
       get "/events"
       assert_equal 200, last_response.status

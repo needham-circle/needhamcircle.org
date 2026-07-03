@@ -53,6 +53,15 @@ body {
   gap: 1.25rem;
 }
 
+.site-brand,
+.site-brand:hover {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  color: inherit;
+  text-decoration: none;
+}
+
 .site-header .logo {
   width: 96px;
   height: 96px;
@@ -207,6 +216,45 @@ a:hover {
 
 .button:active {
   transform: translateY(1px);
+}
+
+.home-boxes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin: 2rem 0 2.5rem;
+}
+
+.home-box {
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.home-box h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.home-box p {
+  margin: 0 0 1.25rem;
+  font-size: 0.9375rem;
+}
+
+.home-box .button {
+  margin-top: auto;
+  align-self: flex-start;
+}
+
+@media (max-width: 640px) {
+  .home-boxes {
+    grid-template-columns: 1fr;
+  }
 }
 
 .actions {
@@ -828,7 +876,7 @@ button[type="submit"]:active {
   .site-header {
     padding: 1.25rem 0;
   }
-  .site-header-inner {
+  .site-brand {
     gap: 1rem;
   }
   .site-header .logo {

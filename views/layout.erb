@@ -27,17 +27,19 @@
   <body<%== ' class="wide"' if @wide %>>
     <header class="site-header">
       <div class="container site-header-inner">
-        <img src="/needham-circle.svg" alt="" class="logo" aria-hidden="true">
-        <hgroup>
-          <h1>Needham Circle</h1>
-          <p class="tagline">Building a more connected community</p>
-        </hgroup>
+        <a class="site-brand" href="/"<%== ' aria-current="page"' if request.path == "/" %>>
+          <img src="/needham-circle.svg" alt="" class="logo" aria-hidden="true">
+          <hgroup>
+            <h1>Needham Circle</h1>
+            <p class="tagline">Building a more connected community</p>
+          </hgroup>
+        </a>
       </div>
     </header>
 
     <nav class="site-nav" aria-label="Primary">
       <ul class="container">
-        <li><a href="/"<%== ' aria-current="page"' if request.path == "/" %>>About</a></li>
+        <li><a href="/about"<%== ' aria-current="page"' if request.path == "/about" %>>About</a></li>
         <li><a href="/events"<%== ' aria-current="page"' if request.path == "/events" %>>Events</a></li>
         <li><a href="/submit"<%== ' aria-current="page"' if request.path == "/submit" %>>Submit</a></li>
         <li><a href="/resources"<%== ' aria-current="page"' if request.path == "/resources" %>>Resources</a></li>

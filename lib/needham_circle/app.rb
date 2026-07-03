@@ -145,7 +145,14 @@ module NeedhamCircle
 
     get "/" do
       @page_title = "Needham Circle"
-      @page_description = "About Needham Circle: bringing people together, coordinating events across town, and serving as a central hub for community-building."
+      @page_description = "Welcome to Needham Circle — find local events, share your own, discover community resources, and get involved in building a more connected Needham."
+      @wide = true
+      erb :home
+    end
+
+    get "/about" do
+      @page_title = "Needham Circle — About"
+      @page_description = "About Needham Circle: a grassroots effort to bring neighbors together and build a more connected community."
       erb :about
     end
 
