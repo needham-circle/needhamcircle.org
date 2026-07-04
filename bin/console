@@ -14,6 +14,10 @@ module NeedhamCircle
       GoogleCalendar.new(secrets.fetch("SERVICE_ACCOUNT_KEY"))
     end
 
+    def green_needham
+      Sync::GreenNeedham.new(**sync_kwargs)
+    end
+
     def lets_bike
       Sync::LetsBike.new(**sync_kwargs)
     end

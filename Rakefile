@@ -30,6 +30,9 @@ namespace :sync do
     exit(sync.call ? 0 : 1)
   end
 
+  desc "Sync Green Needham events into the public Google Calendar"
+  task(:green_needham) { run_sync { NeedhamCircle::Sync::GreenNeedham } }
+
   desc "Sync LWV-Needham events into the public Google Calendar"
   task(:lwv) { run_sync { NeedhamCircle::Sync::Lwv } }
 

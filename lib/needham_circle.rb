@@ -20,6 +20,8 @@ require "needham_circle/source"
 
 require "needham_circle/sync"
 require "needham_circle/sync/runner"
+require "needham_circle/sync/tribe"
+require "needham_circle/sync/green_needham"
 require "needham_circle/sync/lets_bike"
 require "needham_circle/sync/lwv"
 require "needham_circle/sync/needham_gov"

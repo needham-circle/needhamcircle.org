@@ -15,6 +15,7 @@ module NeedhamCircle
 
     ALL = [
       NIL = Source.new("community", "Community Submissions", nil),
+      GN = Source.new("green-needham", "Green Needham", "green-needham"),
       LWV = Source.new("lwv", "League of Women Voters", "lwv-needham"),
       LBN = Source.new("lets-bike", "Let's Bike Needham", "lets-bike-needham"),
       NO = Source.new("observer", "Needham Observer", "needham-observer"),
