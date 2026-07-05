@@ -29,6 +29,7 @@ require "needham_circle/sync/lwv"
 require "needham_circle/sync/needham_concert_society"
 require "needham_circle/sync/needham_farm"
 require "needham_circle/sync/needham_gov"
+require "needham_circle/sync/needham_history"
 require "needham_circle/sync/needham_observer"
 require "needham_circle/sync/needham_rotary"
 

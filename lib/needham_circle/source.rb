@@ -20,6 +20,7 @@ module NeedhamCircle
       LBN = Source.new("lets-bike", "Let's Bike Needham", "lets-bike-needham"),
       NCS = Source.new("concert-society", "Needham Concert Society", "needham-concert-society"),
       NF = Source.new("needham-farm", "Needham Farm", "needham-farm"),
+      NH = Source.new("history", "Needham History Center", "needham-history"),
       NO = Source.new("observer", "Needham Observer", "needham-observer"),
       RC = Source.new("rotary", "Rotary Club", "needham-rotary"),
       TN = Source.new("town", "Town of Needham", "needham-gov")
