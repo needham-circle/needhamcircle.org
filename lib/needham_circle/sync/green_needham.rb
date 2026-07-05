@@ -6,6 +6,8 @@ module NeedhamCircle
     # /blog, so its REST events endpoint lives beneath that path. The feed is
     # otherwise plain, so it delegates entirely to a configured Tribe fetcher.
     class GreenNeedham
+      Sync.register(self)
+
       ENDPOINT = "https://www.greenneedham.org/blog/wp-json/tribe/events/v1/events"
 
       #: (?fetch_page: ^(Integer) -> Hash[String, untyped]?, ?logger: Logger?) -> void

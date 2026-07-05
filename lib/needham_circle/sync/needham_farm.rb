@@ -1,9 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
-require "net/http"
 require "time"
-require "uri"
 
 module NeedhamCircle
   module Sync
@@ -15,6 +13,8 @@ module NeedhamCircle
     # This is an undocumented, client-facing API — expect it to be brittle and
     # to need attention if Wix changes the endpoints or token flow.
     class NeedhamFarm
+      Sync.register(self)
+
       HOST = "https://www.needhamfarm.org"
 
       # The Wix Events app's fixed appDefinitionId; the access-tokens response
@@ -58,8 +58,12 @@ module NeedhamCircle
           end
 
           meta = payload["pagingMetadata"] || {}
-          offset += meta["count"] || page.size
-          break if page.empty? || offset >= (meta["total"] || offset)
+          total = meta["total"]
+          count = meta["count"] || page.size
+          offset += count
+          # Stop at the end of the results, and defensively when a page makes no
+          # progress or omits the total, so a malformed response can't spin here.
+          break if page.empty? || count.zero? || total.nil? || offset >= total
         end
         events
       end
@@ -72,29 +76,26 @@ module NeedhamCircle
         return nil if instance.nil?
 
         body = JSON.generate("query" => { "paging" => { "limit" => PER_PAGE, "offset" => offset } })
-        response = http_post(EVENTS_QUERY_URL, body, "Authorization" => instance)
-        return nil if response.nil?
-
-        JSON.parse(response)
-      rescue StandardError => error
-        log("events query offset=#{offset} raised: #{error.class}: #{error.message}")
-        nil
+        Sync::HTTP.post_json(EVENTS_QUERY_URL, body, { "Authorization" => instance }, logger: @logger)
       end
 
       # The Wix Events app's instance token, good for the life of this run.
       #: () -> String?
       def instance_token
-        @instance_token ||=
-          begin
-            response = http_get(ACCESS_TOKENS_URL)
-            app = response && (JSON.parse(response)["apps"] || {})[EVENTS_APP_ID]
-            token = app && app["instance"]
-            log("access-tokens response had no Wix Events instance") if token.nil?
-            token
-          rescue StandardError => error
-            log("access-tokens fetch raised: #{error.class}: #{error.message}")
-            nil
-          end
+        @instance_token ||= fetch_instance_token
+      end
+
+      #: () -> String?
+      def fetch_instance_token
+        # This viewer API is undocumented and brittle, so guard each level of
+        # the response shape rather than trusting it: Hash#dig would still raise
+        # if `apps` or its entry came back as a non-Hash.
+        data = Sync::HTTP.get_json(ACCESS_TOKENS_URL, logger: @logger)
+        apps = data["apps"] if data.is_a?(Hash)
+        app = apps[EVENTS_APP_ID] if apps.is_a?(Hash)
+        token = app["instance"] if app.is_a?(Hash)
+        log("access-tokens response had no Wix Events instance") if token.nil?
+        token
       end
 
       #: (Hash[String, untyped] raw) -> Event?
@@ -153,37 +154,6 @@ module NeedhamCircle
       def format_time(iso)
         return nil if iso.nil? || iso.empty?
         Time.iso8601(iso).utc.strftime("%Y-%m-%dT%H:%M:%SZ")
-      end
-
-      #: (String url, ?Hash[String, String] headers) -> String?
-      def http_get(url, headers = {})
-        http_request(url, Net::HTTP::Get.new(URI(url).request_uri), headers)
-      end
-
-      #: (String url, String body, ?Hash[String, String] headers) -> String?
-      def http_post(url, body, headers = {})
-        request = Net::HTTP::Post.new(URI(url).request_uri)
-        request.body = body
-        request["Content-Type"] = "application/json"
-        http_request(url, request, headers)
-      end
-
-      #: (String url, Net::HTTPRequest request, Hash[String, String] headers) -> String?
-      def http_request(url, request, headers)
-        uri = URI(url)
-        request["User-Agent"] = USER_AGENT
-        headers.each { |name, value| request[name] = value }
-
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = uri.scheme == "https"
-        http.open_timeout = 10
-        http.read_timeout = 30
-
-        response = http.request(request)
-        return response.body if response.is_a?(Net::HTTPSuccess)
-
-        log("#{request.method} #{uri.path} returned status #{response.code}")
-        nil
       end
 
       #: (String message) -> void

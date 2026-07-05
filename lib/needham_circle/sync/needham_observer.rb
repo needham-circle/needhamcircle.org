@@ -11,6 +11,8 @@ module NeedhamCircle
     # the prose — an "Add to calendar" subscribe dropdown, event-meta, and venue
     # block) that must be stripped before reducing to text.
     class NeedhamObserver
+      Sync.register(self)
+
       ENDPOINT = "https://needhamobserver.com/wp-json/tribe/events/v1/events"
 
       SCHEDULE_BLOCK = %r{<div\b[^>]*tribe-events-schedule\b.*?</div>}mi

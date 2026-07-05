@@ -4,6 +4,37 @@ require "cgi/escape"
 
 module NeedhamCircle
   module Sync
+    # The registered syncer classes — the single source of truth for which
+    # sources sync. Each fetcher class calls `Sync.register(self)` in its body,
+    # so this list is derived from the classes themselves rather than a parallel
+    # names array, and there is no name->class lookup to keep in step. A source's
+    # feed name (its `sync:<name>` rake task, CI matrix entry, and bin/console
+    # helper) is just its class name in snake_case; see .name_for.
+    @fetchers = []
+
+    #: (Class fetcher) -> void
+    def self.register(fetcher)
+      @fetchers << fetcher
+    end
+
+    #: () -> Array[Class]
+    def self.fetchers
+      @fetchers
+    end
+
+    # A fetcher's feed name, e.g. NeedhamGov -> "needham_gov". Names are always
+    # derived from the class this way, never parsed back into one.
+    #: (Class fetcher) -> String
+    def self.name_for(fetcher)
+      fetcher.name.split("::").last.gsub(/([a-z])([A-Z])/, '\1_\2').downcase
+    end
+
+    # The feed names, sorted, for the rake tasks and CI matrix.
+    #: () -> Array[String]
+    def self.source_names
+      fetchers.map { |fetcher| name_for(fetcher) }.sort
+    end
+
     # Normalized shape produced by every source-specific syncer. Times are
     # strings in "YYYY-MM-DDTHH:MM:SS" form, paired with an IANA timezone, so
     # Google Calendar receives wall-clock times in the source's zone rather

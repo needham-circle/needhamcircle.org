@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 $:.unshift File.expand_path(File.join("..", "lib"), __dir__)
+require "logger"
 require "needham_circle"
 require "irb"
 
@@ -14,38 +15,10 @@ module NeedhamCircle
       GoogleCalendar.new(secrets.fetch("SERVICE_ACCOUNT_KEY"))
     end
 
-    def green_needham
-      Sync::GreenNeedham.new(**sync_kwargs)
-    end
-
-    def lets_bike
-      Sync::LetsBike.new(**sync_kwargs)
-    end
-
-    def needham_farm
-      Sync::NeedhamFarm.new(**sync_kwargs)
-    end
-
-    def lwv
-      Sync::Lwv.new(**sync_kwargs)
-    end
-
-    def needham_gov
-      Sync::NeedhamGov.new(**sync_kwargs)
-    end
-
-    def needham_rotary
-      Sync::NeedhamRotary.new(**sync_kwargs)
-    end
-
-    private
-
-    def sync_kwargs
-      {
-        calendar: calendar,
-        calendar_id: secrets.fetch("EVENTS_CALENDAR_ID"),
-        logger: Logger.new($stdout)
-      }
+    # A ready-to-use fetcher per source (e.g. `lwv.fetch_events` in the REPL),
+    # generated from the registered fetchers so a new source needs no edit here.
+    Sync.fetchers.each do |fetcher|
+      define_method(Sync.name_for(fetcher)) { fetcher.new(logger: Logger.new($stdout)) }
     end
   end
 end

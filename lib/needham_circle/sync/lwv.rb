@@ -5,6 +5,8 @@ module NeedhamCircle
     # LWV-Needham runs The Events Calendar (Tribe) with a plain REST feed, so it
     # delegates entirely to a configured Tribe fetcher.
     class Lwv
+      Sync.register(self)
+
       ENDPOINT = "https://lwv-needham.org/wp-json/tribe/events/v1/events"
 
       #: (?fetch_page: ^(Integer) -> Hash[String, untyped]?, ?logger: Logger?) -> void

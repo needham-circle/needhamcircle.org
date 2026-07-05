@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require "icalendar"
-require "net/http"
-require "uri"
 
 module NeedhamCircle
   module Sync
     class NeedhamGov
+      Sync.register(self)
+
       CATEGORY_ID = 84 # Community Events
       BASE_URL = "https://www.needhamma.gov"
       ENDPOINT = "#{BASE_URL}/common/modules/iCalendar/iCalendar.aspx?catID=#{CATEGORY_ID}&feed=calendar"
@@ -60,23 +60,7 @@ module NeedhamCircle
 
       #: () -> String?
       def fetch_from_api
-        uri = URI(ENDPOINT)
-
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = uri.scheme == "https"
-        http.open_timeout = 10
-        http.read_timeout = 30
-
-        response = http.get(uri.request_uri, { "User-Agent" => USER_AGENT })
-        unless response.is_a?(Net::HTTPSuccess)
-          log("fetch returned status #{response.code}")
-          return nil
-        end
-
-        response.body
-      rescue StandardError => error
-        log("fetch raised: #{error.class}: #{error.message}")
-        nil
+        Sync::HTTP.get(ENDPOINT, logger: @logger)
       end
 
       #: (Icalendar::Event ics_event) -> Event

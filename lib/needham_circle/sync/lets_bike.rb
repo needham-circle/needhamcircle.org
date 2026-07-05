@@ -1,12 +1,10 @@
 # frozen_string_literal: true
 
-require "json"
-require "net/http"
-require "uri"
-
 module NeedhamCircle
   module Sync
     class LetsBike
+      Sync.register(self)
+
       BASE_URL = "https://www.letsbikeneedham.com"
       ENDPOINT = "#{BASE_URL}/events?format=json"
 
@@ -37,23 +35,7 @@ module NeedhamCircle
 
       #: () -> Hash[String, untyped]?
       def fetch_from_api
-        uri = URI(ENDPOINT)
-
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = uri.scheme == "https"
-        http.open_timeout = 10
-        http.read_timeout = 30
-
-        response = http.get(uri.request_uri, { "User-Agent" => USER_AGENT })
-        unless response.is_a?(Net::HTTPSuccess)
-          log("fetch returned status #{response.code}")
-          return nil
-        end
-
-        JSON.parse(response.body)
-      rescue StandardError => error
-        log("fetch raised: #{error.class}: #{error.message}")
-        nil
+        Sync::HTTP.get_json(ENDPOINT, logger: @logger)
       end
 
       #: (Hash[String, untyped] raw) -> Event
@@ -95,11 +77,6 @@ module NeedhamCircle
         return "" if path.nil? || path.empty?
         return path if path.start_with?("http")
         "#{BASE_URL}#{path.start_with?("/") ? path : "/#{path}"}"
-      end
-
-      #: (String message) -> void
-      def log(message)
-        @logger&.error("Sync::LetsBike #{message}")
       end
     end
   end

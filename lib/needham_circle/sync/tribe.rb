@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "json"
-require "net/http"
 require "uri"
 
 module NeedhamCircle
@@ -65,22 +63,7 @@ module NeedhamCircle
         uri = URI(@endpoint)
         uri.query =
           URI.encode_www_form(per_page: PER_PAGE, page: page, status: "publish")
-
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = uri.scheme == "https"
-        http.open_timeout = 10
-        http.read_timeout = 30
-
-        response = http.get(uri.request_uri, { "User-Agent" => USER_AGENT })
-        unless response.is_a?(Net::HTTPSuccess)
-          log("fetch page=#{page} returned status #{response.code}")
-          return nil
-        end
-
-        JSON.parse(response.body)
-      rescue StandardError => error
-        log("fetch page=#{page} raised: #{error.class}: #{error.message}")
-        nil
+        Sync::HTTP.get_json(uri.to_s, logger: @logger)
       end
 
       #: (Hash[String, untyped] raw) -> Event
@@ -115,11 +98,6 @@ module NeedhamCircle
       def format_time(string)
         return nil if string.nil? || string.empty?
         string.sub(" ", "T")
-      end
-
-      #: (String message) -> void
-      def log(message)
-        @logger&.error("Sync::Tribe[#{@source.slug}] #{message}")
       end
     end
   end

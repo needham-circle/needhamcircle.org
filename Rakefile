@@ -10,44 +10,37 @@ end
 
 task default: :test
 
-namespace :sync do
-  def run_sync
-    $LOAD_PATH.unshift File.expand_path("lib", __dir__)
-    require "logger"
-    require "needham_circle"
+# The sync tasks and `sync:list` derive from the registered fetcher classes, so
+# the app is loaded here to enumerate them.
+$LOAD_PATH.unshift File.expand_path("lib", __dir__)
+require "needham_circle"
 
-    secrets = NeedhamCircle::Env.secrets
-    calendar = NeedhamCircle::GoogleCalendar.new(secrets.fetch("SERVICE_ACCOUNT_KEY"))
+namespace :sync do
+  def run_sync(fetcher)
+    require "logger"
+
     logger = Logger.new($stdout)
+    secrets = NeedhamCircle::Env.secrets
     sync =
       NeedhamCircle::Sync::Runner.new(
-        calendar: calendar,
+        calendar: NeedhamCircle::GoogleCalendar.new(secrets.fetch("SERVICE_ACCOUNT_KEY")),
         calendar_id: secrets.fetch("EVENTS_CALENDAR_ID"),
-        fetcher: yield.new(logger: logger),
+        fetcher: fetcher.new(logger: logger),
         logger: logger
       )
 
     exit(sync.call ? 0 : 1)
   end
 
-  desc "Sync Green Needham events into the public Google Calendar"
-  task(:green_needham) { run_sync { NeedhamCircle::Sync::GreenNeedham } }
+  NeedhamCircle::Sync.fetchers.each do |fetcher|
+    name = NeedhamCircle::Sync.name_for(fetcher)
+    desc "Sync #{name} events into the public Google Calendar"
+    task(name.to_sym) { run_sync(fetcher) }
+  end
 
-  desc "Sync LWV-Needham events into the public Google Calendar"
-  task(:lwv) { run_sync { NeedhamCircle::Sync::Lwv } }
-
-  desc "Sync Let's Bike Needham events into the public Google Calendar"
-  task(:lets_bike) { run_sync { NeedhamCircle::Sync::LetsBike } }
-
-  desc "Sync Needham Farm events into the public Google Calendar"
-  task(:needham_farm) { run_sync { NeedhamCircle::Sync::NeedhamFarm } }
-
-  desc "Sync Town of Needham (needhamma.gov) events into the public Google Calendar"
-  task(:needham_gov) { run_sync { NeedhamCircle::Sync::NeedhamGov } }
-
-  desc "Sync Needham Rotary Club events into the public Google Calendar"
-  task(:needham_rotary) { run_sync { NeedhamCircle::Sync::NeedhamRotary } }
-
-  desc "Sync Needham Observer events into the public Google Calendar"
-  task(:needham_observer) { run_sync { NeedhamCircle::Sync::NeedhamObserver } }
+  desc "Print the sync source names as a JSON array (drives the CI matrix)"
+  task(:list) do
+    require "json"
+    puts JSON.generate(NeedhamCircle::Sync.source_names)
+  end
 end
