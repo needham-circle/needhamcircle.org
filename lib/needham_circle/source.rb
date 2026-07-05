@@ -18,6 +18,7 @@ module NeedhamCircle
       GN = Source.new("green-needham", "Green Needham", "green-needham"),
       LWV = Source.new("lwv", "League of Women Voters", "lwv-needham"),
       LBN = Source.new("lets-bike", "Let's Bike Needham", "lets-bike-needham"),
+      NF = Source.new("needham-farm", "Needham Farm", "needham-farm"),
       NO = Source.new("observer", "Needham Observer", "needham-observer"),
       RC = Source.new("rotary", "Rotary Club", "needham-rotary"),
       TN = Source.new("town", "Town of Needham", "needham-gov")

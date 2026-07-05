@@ -22,6 +22,10 @@ module NeedhamCircle
       Sync::LetsBike.new(**sync_kwargs)
     end
 
+    def needham_farm
+      Sync::NeedhamFarm.new(**sync_kwargs)
+    end
+
     def lwv
       Sync::Lwv.new(**sync_kwargs)
     end
