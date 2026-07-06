@@ -71,6 +71,41 @@ body {
   flex-shrink: 0;
 }
 
+.logo .figure {
+  transform-box: view-box;
+  transform-origin: 50px 31px;
+}
+
+.logo .figure-bottom {
+  transform-origin: 50px 93px;
+}
+
+.logo.rocking .figure {
+  animation: logo-rock 1.1s ease-in-out infinite;
+}
+
+@keyframes logo-rock {
+  0% {
+    transform: rotate(0deg);
+    animation-timing-function: ease-out;
+  }
+  25% {
+    transform: rotate(6deg);
+    animation-timing-function: ease-in;
+  }
+  50% {
+    transform: rotate(0deg);
+    animation-timing-function: ease-out;
+  }
+  75% {
+    transform: rotate(-6deg);
+    animation-timing-function: ease-in;
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
 .site-header h1 {
   margin: 0;
   font-size: 1.875rem;
@@ -709,6 +744,9 @@ a:hover {
 
 @media (prefers-reduced-motion: reduce) {
   .skeleton-line {
+    animation: none;
+  }
+  .logo.rocking .figure {
     animation: none;
   }
 }
