@@ -68,7 +68,7 @@ module NeedhamCircle
 
       #: (Hash[String, untyped] raw) -> Event?
       def build_event(raw)
-        start_at = format_time(raw["localStartDate"])
+        start_at = Sync.format_time(raw["localStartDate"])
         return nil if start_at.nil? # no usable start — can't place it on a calendar
 
         Event.new(
@@ -78,16 +78,9 @@ module NeedhamCircle
           location: raw["location"].to_s,
           url: "",
           start_at: start_at,
-          end_at: format_time(raw["localEndDate"]),
+          end_at: Sync.format_time(raw["localEndDate"]),
           timezone: TIMEZONE
         )
-      end
-
-      # "2026-09-19 19:30:00" -> "2026-09-19T19:30:00" (Google wants the "T").
-      #: (String? string) -> String?
-      def format_time(string)
-        return nil if string.nil? || string.empty?
-        string.sub(" ", "T")
       end
     end
   end

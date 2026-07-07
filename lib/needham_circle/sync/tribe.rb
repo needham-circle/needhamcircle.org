@@ -74,8 +74,8 @@ module NeedhamCircle
           description: @description.call(raw["description"]),
           location: format_location(raw["venue"]),
           url: raw["url"].to_s,
-          start_at: format_time(raw["start_date"]),
-          end_at: format_time(raw["end_date"]),
+          start_at: Sync.format_time(raw["start_date"]),
+          end_at: Sync.format_time(raw["end_date"]),
           timezone: TIMEZONE
         )
       end
@@ -91,13 +91,6 @@ module NeedhamCircle
           venue["state"],
           venue["zip"]
         ].compact.reject { |part| part.to_s.strip.empty? }.join(", ")
-      end
-
-      # Tribe returns "2026-05-28 18:00:00" — Google wants ISO-ish with a "T".
-      #: (String? string) -> String?
-      def format_time(string)
-        return nil if string.nil? || string.empty?
-        string.sub(" ", "T")
       end
     end
   end

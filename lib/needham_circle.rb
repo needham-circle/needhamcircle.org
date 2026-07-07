@@ -33,5 +33,6 @@ require "needham_circle/sync/needham_history"
 require "needham_circle/sync/needham_observer"
 require "needham_circle/sync/needham_rotary"
 require "needham_circle/sync/needham_schools_arts"
+require "needham_circle/sync/volante_farms"
 
 require "needham_circle/app"

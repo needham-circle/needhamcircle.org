@@ -38,6 +38,16 @@ module NeedhamCircle
           parse_json(perform(uri, request, headers, logger), url, logger)
         end
 
+        # POST form-encoded params to url and parse the JSON response, or nil
+        # on failure.
+        #: (String url, Hash[String, String] params, ?Hash[String, String] headers, ?logger: Logger?) -> untyped
+        def post_form(url, params, headers = {}, logger: nil)
+          uri = URI(url)
+          request = Net::HTTP::Post.new(uri.request_uri)
+          request.set_form_data(params)
+          parse_json(perform(uri, request, headers, logger), url, logger)
+        end
+
         private
 
         #: (URI uri, Net::HTTPRequest request, Hash[String, String] headers, Logger? logger) -> Net::HTTPResponse?

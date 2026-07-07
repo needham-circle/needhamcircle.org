@@ -56,6 +56,14 @@ module NeedhamCircle
     # "User-Agent: Ruby" is opaque and CivicPlus 404s it.
     USER_AGENT = "NeedhamCircleSync/1.0 (+https://github.com/kddnewton/needham-circle)"
 
+    # Several feeds report wall-clock times as "2026-05-28 18:00:00" — Google
+    # wants ISO-ish with a "T".
+    #: (String? string) -> String?
+    def self.format_time(string)
+      return nil if string.nil? || string.empty?
+      string.sub(" ", "T")
+    end
+
     # Reduces a source's HTML description to plain text for display. Drops
     # <script>/<style> blocks (contents and all, so CSS/JS never leaks into the
     # text), turns <br> and block-level boundaries into newlines so paragraph

@@ -24,7 +24,8 @@ module NeedhamCircle
       NO = Source.new("observer", "Needham Observer", "needham-observer"),
       NPSA = Source.new("schools-arts", "NPS Fine & Performing Arts", "needham-schools-arts"),
       RC = Source.new("rotary", "Rotary Club", "needham-rotary"),
-      TN = Source.new("town", "Town of Needham", "needham-gov")
+      TN = Source.new("town", "Town of Needham", "needham-gov"),
+      VF = Source.new("volante-farms", "Volante Farms", "volante-farms")
     ].freeze
   end
 end
