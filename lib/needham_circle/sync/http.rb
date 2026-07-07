@@ -17,14 +17,15 @@ module NeedhamCircle
         #: (String url, ?Hash[String, String] headers, ?logger: Logger?) -> String?
         def get(url, headers = {}, logger: nil)
           uri = URI(url)
-          perform(uri, Net::HTTP::Get.new(uri.request_uri), headers, logger)
+          perform(uri, Net::HTTP::Get.new(uri.request_uri), headers, logger)&.body
         end
 
         # GET url and parse the body as JSON, or nil on request failure or
         # malformed JSON (logged).
         #: (String url, ?Hash[String, String] headers, ?logger: Logger?) -> untyped
         def get_json(url, headers = {}, logger: nil)
-          parse_json(get(url, headers, logger: logger), url, logger)
+          uri = URI(url)
+          parse_json(perform(uri, Net::HTTP::Get.new(uri.request_uri), headers, logger), url, logger)
         end
 
         # POST a JSON body to url and parse the JSON response, or nil on failure.
@@ -39,7 +40,7 @@ module NeedhamCircle
 
         private
 
-        #: (URI uri, Net::HTTPRequest request, Hash[String, String] headers, Logger? logger) -> String?
+        #: (URI uri, Net::HTTPRequest request, Hash[String, String] headers, Logger? logger) -> Net::HTTPResponse?
         def perform(uri, request, headers, logger)
           request["User-Agent"] = USER_AGENT
           headers.each { |name, value| request[name] = value }
@@ -50,7 +51,7 @@ module NeedhamCircle
           http.read_timeout = 30
 
           response = http.request(request)
-          return response.body if response.is_a?(Net::HTTPSuccess)
+          return response if response.is_a?(Net::HTTPSuccess)
 
           logger&.error("Sync::HTTP #{request.method} #{uri} returned status #{response.code}")
           nil
@@ -59,11 +60,15 @@ module NeedhamCircle
           nil
         end
 
-        #: (String? body, String url, Logger? logger) -> untyped
-        def parse_json(body, url, logger)
-          body && JSON.parse(body)
+        #: (Net::HTTPResponse? response, String url, Logger? logger) -> untyped
+        def parse_json(response, url, logger)
+          response && JSON.parse(response.body)
         rescue JSON::ParserError => error
-          logger&.error("Sync::HTTP #{url} returned invalid JSON: #{error.message}")
+          logger&.error(
+            "Sync::HTTP #{url} returned invalid JSON " \
+              "(Content-Type: #{response["Content-Type"].inspect}): #{error.message}; " \
+              "body starts with: #{response.body.to_s[0, 500].inspect}"
+          )
           nil
         end
       end
