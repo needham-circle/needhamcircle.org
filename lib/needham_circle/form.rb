@@ -102,6 +102,26 @@ module NeedhamCircle
       end
     end
 
+    class SelectField < Field
+      #: (Symbol name, String human, values: Array[String], default: String) -> void
+      def initialize(name, human, values:, default:)
+        super(name, human)
+        @values = values
+        @default = default
+      end
+
+      # Keeps only known values; anything else falls back to the default.
+      #: (String? value) -> String
+      def coerce(value)
+        @values.include?(value) ? value : @default
+      end
+
+      #: (String value) -> String?
+      def validate(value)
+        nil
+      end
+    end
+
     class MultiSelectField < Field
       attr_reader :values #: Array[String]
 
@@ -187,6 +207,11 @@ module NeedhamCircle
       #: (Symbol name, String human, **options) -> void
       def multi_select_field(name, human, **options)
         field MultiSelectField.new(name, human, **options)
+      end
+
+      #: (Symbol name, String human, **options) -> void
+      def select_field(name, human, **options)
+        field SelectField.new(name, human, **options)
       end
 
       #: (Symbol name, String human, **options) -> void

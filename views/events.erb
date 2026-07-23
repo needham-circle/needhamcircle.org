@@ -1,0 +1,9 @@
+<% if @events.nil? %>
+  <p class="empty-state">We're having trouble loading events right now. Please check back soon.</p>
+<% elsif @events.empty? %>
+  <p class="empty-state">No upcoming events.</p>
+<% elsif @filter.view == "calendar" %>
+  <%== erb :events_calendar, layout: false %>
+<% else %>
+  <%== erb :events_list, layout: false %>
+<% end %>

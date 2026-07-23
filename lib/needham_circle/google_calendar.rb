@@ -2,6 +2,11 @@
 
 module NeedhamCircle
   class GoogleCalendar
+    # One page of upcoming events; the /events views render everything
+    # returned, and the calendar view drops its trailing month when this cap
+    # was hit (see MonthGrid.build's truncated flag).
+    MAX_RESULTS = 250
+
     class Result
       attr_reader :value #: T
       attr_reader :error #: Google::Apis::Error?
@@ -22,6 +27,22 @@ module NeedhamCircle
     end
 
     class EventView
+      # Pairs the event with the formatter matching its start kind: Google
+      # sends date_time for timed events and date for all-day ones.
+      #: (Google::Apis::CalendarV3::Event event) -> EventView
+      def self.for(event)
+        formatter =
+          if event.start.date_time
+            EventDateTimeFormatter.new
+          elsif event.start.date
+            EventDateFormatter.new
+          else
+            raise
+          end
+
+        new(event, formatter)
+      end
+
       #: (Google::Apis::CalendarV3::Event event, (EventDateTimeFormatter | EventDateFormatter) formatter) -> void
       def initialize(event, formatter)
         @event = event
@@ -55,6 +76,19 @@ module NeedhamCircle
         end
       end
 
+      # Memoized — the grid layout consults these dates for every cell.
+      #: () -> Date
+      def date
+        @date ||= @formatter.date(@event)
+      end
+
+      # The last day the event occupies, for laying multi-day events across
+      # the calendar grid. Never before #date. Memoized like #date.
+      #: () -> Date
+      def end_date
+        @end_date ||= @formatter.end_date(@event)
+      end
+
       #: () -> String
       def iso8601
         @formatter.iso8601(@event)
@@ -63,6 +97,13 @@ module NeedhamCircle
       #: () -> String
       def formatted_starts_at
         @formatter.formatted_starts_at(@event)
+      end
+
+      # The compact start time shown in the calendar's day cells ("7pm",
+      # "7:30pm"); all-day events have none.
+      #: () -> String?
+      def formatted_time
+        @formatter.formatted_time(@event)
       end
 
       #: () -> String?
@@ -79,6 +120,20 @@ module NeedhamCircle
     class EventDateTimeFormatter
       LONG_FORMAT = "%A, %B %-d at %-l:%M %p"
 
+      #: (Google::Apis::CalendarV3::Event event) -> Date
+      def date(event)
+        event.start.date_time.to_date
+      end
+
+      #: (Google::Apis::CalendarV3::Event event) -> Date
+      def end_date(event)
+        ends = event.end.date_time
+        ending = ends.to_date
+        # An event ending exactly at midnight doesn't occupy that day.
+        ending -= 1 if ends.hour.zero? && ends.min.zero?
+        [ending, date(event)].max
+      end
+
       #: (Google::Apis::CalendarV3::Event event) -> String
       def iso8601(event)
         event.start.date_time.iso8601
@@ -87,6 +142,12 @@ module NeedhamCircle
       #: (Google::Apis::CalendarV3::Event event) -> String
       def formatted_starts_at(event)
         event.start.date_time.strftime(LONG_FORMAT)
+      end
+
+      #: (Google::Apis::CalendarV3::Event event) -> String
+      def formatted_time(event)
+        starts = event.start.date_time
+        starts.strftime(starts.min.zero? ? "%-l%P" : "%-l:%M%P")
       end
 
       #: (Google::Apis::CalendarV3::Event event) -> String
@@ -109,6 +170,18 @@ module NeedhamCircle
     class EventDateFormatter
       LONG_FORMAT = "%A, %B %-d"
 
+      #: (Google::Apis::CalendarV3::Event event) -> Date
+      def date(event)
+        event.start.date
+      end
+
+      # Google Calendar all-day end dates are exclusive, so the inclusive
+      # last day is the day before (clamped for zero-length events).
+      #: (Google::Apis::CalendarV3::Event event) -> Date
+      def end_date(event)
+        [event.end.date - 1, date(event)].max
+      end
+
       #: (Google::Apis::CalendarV3::Event event) -> String
       def iso8601(event)
         event.start.date.iso8601
@@ -120,11 +193,15 @@ module NeedhamCircle
       end
 
       #: (Google::Apis::CalendarV3::Event event) -> String?
+      def formatted_time(_event)
+        nil
+      end
+
+      # A single-day event has no end to show.
+      #: (Google::Apis::CalendarV3::Event event) -> String?
       def formatted_ends_at(event)
-        # Google Calendar all-day end dates are exclusive, so the inclusive
-        # last day is the day before. A single-day event has no end to show.
-        inclusive_end = event.end.date - 1
-        return if inclusive_end <= event.start.date
+        inclusive_end = end_date(event)
+        return if inclusive_end <= date(event)
 
         inclusive_end.strftime(LONG_FORMAT)
       end
@@ -155,21 +232,10 @@ module NeedhamCircle
             single_events: true,
             order_by: "startTime",
             time_min: Time.now.iso8601,
-            max_results: 50
+            max_results: MAX_RESULTS
           )
           .items
-          .map do |google_event|
-            EventView.new(
-              google_event,
-              if google_event.start.date_time
-                EventDateTimeFormatter.new
-              elsif google_event.start_date
-                EventDateFormatter.new
-              else
-                raise
-              end
-            )
-          end
+          .map { |google_event| EventView.for(google_event) }
       end
     end
 

@@ -31,6 +31,7 @@ module NeedhamCircle
 
     class FilterForm < Form
       string_field :q, "Search", nullify: true
+      select_field :view, "View", values: %w[list calendar], default: "list"
       multi_select_field :source, "Source", values: Source::ALL.map(&:slug)
 
       #: () -> Array[Source]
@@ -41,6 +42,16 @@ module NeedhamCircle
       #: () -> String?
       def query
         coerced_for(:q)
+      end
+
+      #: () -> String
+      def view
+        coerced_for(:view)
+      end
+
+      #: (String view) -> String
+      def view_url(view)
+        filter_url(coerced_for(:source), view: view)
       end
 
       #: () -> Array[Source]
@@ -73,17 +84,19 @@ module NeedhamCircle
 
       private
 
-      # Builds a "/events" URL for the given source selection, preserving the
-      # current search query. The source param is comma-joined (see
-      # MultiSelectField).
-      #: (Array[String] slugs) -> String
-      def filter_url(slugs)
+      # Builds a "/events" URL for the given source selection and view,
+      # preserving the current search query. The source param is comma-joined
+      # (see MultiSelectField); the default list view stays out of the URL.
+      #: (Array[String] slugs, ?view: String) -> String
+      def filter_url(slugs, view: self.view)
         query_params = {}
         query_params["source"] = slugs.join(",") unless slugs.empty?
 
         if (q = query)
           query_params["q"] = q
         end
+
+        query_params["view"] = view if view == "calendar"
 
         query_params.empty? ? "/events" : "/events?#{URI.encode_www_form(query_params)}"
       end
@@ -124,6 +137,12 @@ module NeedhamCircle
         result
       end
 
+      # The color identifying an event's source in the calendar view.
+      #: (GoogleCalendar::EventView event) -> String
+      def source_color(event)
+        Source.for_value(event.source).color
+      end
+
       #: (FilterForm filter) -> Array[GoogleCalendar::EventView]?
       def list_events(filter)
         result = google_calendar.list_events(settings.events_calendar_id, query: filter.query)
@@ -160,10 +179,24 @@ module NeedhamCircle
       @page_title = "Needham Circle — Events"
       @page_description = "Upcoming community events in Needham Circle. Browse what's happening, and submit your own events."
       @events = list_events(@filter = FilterForm.new(params))
+      # The month grid wants horizontal room, so the calendar view gets the
+      # wide layout (the filter script mirrors this on the body class when
+      # toggling views without a navigation). Date.today is Needham-local
+      # via the TZ pin in config.ru.
+      @wide = @filter.view == "calendar"
+      if @wide && @events
+        @month_grids =
+          MonthGrid.build(
+            @events,
+            today: Date.today,
+            truncated: @events.length >= GoogleCalendar::MAX_RESULTS
+          )
+      end
       # The filter script re-requests this route with X-Requested-With to swap
-      # just the list; a normal navigation gets the full page around it.
+      # just the events region; a normal navigation gets the full page around
+      # it. The :events partial picks the list or calendar view.
       if request.env["HTTP_X_REQUESTED_WITH"] == "fetch"
-        erb :events_list, layout: false
+        erb :events, layout: false
       else
         erb :index
       end

@@ -15,8 +15,9 @@
   var badge = filters.querySelector("[data-source-count]");
   var applied = filters.querySelector("[data-applied]");
   var search = filters.querySelector("[data-search]");
-  var skeleton = document.querySelector("[data-skeleton]");
+  var views = Array.prototype.slice.call(filters.querySelectorAll("[data-view]"));
   var searchTimer = null;
+  var refreshSequence = 0;
 
   // The source options whose aria-checked is currently "true".
   function selected() {
@@ -29,6 +30,22 @@
     option.setAttribute("aria-checked", value ? "true" : "false");
   }
 
+  // The view whose toggle option is currently active ("list" or "calendar").
+  function currentView() {
+    var active = views.filter(function (option) {
+      return option.getAttribute("aria-current") === "true";
+    })[0];
+    return active ? active.dataset.view : "list";
+  }
+
+  function setView(view) {
+    views.forEach(function (option) {
+      option.setAttribute("aria-current", option.dataset.view === view ? "true" : "false");
+    });
+    // The calendar view renders in the wide layout (see the /events route).
+    document.body.classList.toggle("wide", view === "calendar");
+  }
+
   // Builds the query string from the current selection and search state.
   function queryString() {
     var params = new URLSearchParams();
@@ -39,6 +56,8 @@
     if (slugs.length) params.set("source", slugs.join(","));
 
     if (search && search.value.trim()) params.set("q", search.value.trim());
+
+    if (currentView() === "calendar") params.set("view", "calendar");
 
     return params.toString();
   }
@@ -72,13 +91,18 @@
     }
   }
 
-  // Fetches the filtered list fragment and swaps it into the results region.
-  // The fetch hits the calendar API server-side, so show skeleton placeholders
-  // that mirror the events layout while it's in flight. On a network error,
-  // restore the previous list rather than leaving the skeleton up.
+  // Fetches the filtered fragment and swaps it into the results region. The
+  // fetch hits the calendar API server-side, so show skeleton placeholders
+  // that mirror the active view while it's in flight. Stale responses (a
+  // newer refresh has started) are dropped, and a failed fetch shows the
+  // same friendly error the server renders — so the region always matches
+  // the URL, toggle, and layout state rather than reverting to the previous
+  // view's markup.
   function refresh() {
     var qs = queryString();
-    var previous = results.innerHTML;
+    var sequence = ++refreshSequence;
+    var skeleton = document.querySelector('[data-skeleton="' + currentView() + '"]');
+    var error = document.querySelector("[data-error]");
     if (skeleton) results.innerHTML = skeleton.innerHTML;
     results.setAttribute("aria-busy", "true");
     fetch("/events" + (qs ? "?" + qs : ""), {
@@ -88,13 +112,13 @@
         return response.text();
       })
       .then(function (html) {
-        results.innerHTML = html;
+        if (sequence === refreshSequence) results.innerHTML = html;
       })
       .catch(function () {
-        results.innerHTML = previous;
+        if (sequence === refreshSequence && error) results.innerHTML = error.innerHTML;
       })
       .then(function () {
-        results.removeAttribute("aria-busy");
+        if (sequence === refreshSequence) results.removeAttribute("aria-busy");
       });
   }
 
@@ -115,8 +139,19 @@
       setChecked(option, slugs.indexOf(option.dataset.source) !== -1);
     });
     if (search) search.value = params.get("q") || "";
+    setView(params.get("view") === "calendar" ? "calendar" : "list");
     render();
   }
+
+  // Switch between the list and calendar views.
+  views.forEach(function (option) {
+    option.addEventListener("click", function (event) {
+      event.preventDefault();
+      if (option.dataset.view === currentView()) return;
+      setView(option.dataset.view);
+      apply();
+    });
+  });
 
   // Toggle a source from within the dropdown.
   options.forEach(function (option) {

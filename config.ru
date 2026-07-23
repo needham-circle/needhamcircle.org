@@ -1,3 +1,8 @@
+# Every date and wall-clock decision in the app (e.g. the calendar view's
+# "today" highlight) is about Needham; pin the process zone so Date.today and
+# Time.now agree with the events regardless of the host's default.
+ENV["TZ"] ||= "America/New_York"
+
 $:.unshift File.expand_path("lib", __dir__)
 require "needham_circle"
 

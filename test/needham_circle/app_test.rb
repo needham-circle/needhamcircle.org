@@ -104,6 +104,91 @@ module NeedhamCircle
       assert_equal 200, last_response.status
     end
 
+    def test_index_defaults_to_list_view_with_calendar_toggle_link
+      @fake_calendar.events_to_return = [event_view(summary: "Town Meeting")]
+      get "/events"
+      assert_equal 200, last_response.status
+      # The list markup renders and the toggle marks List active.
+      assert_includes events_region, %(<ul class="events">)
+      refute_includes events_region, %(<table class="cal-month">)
+      assert_match(/data-view="list"[^>]*aria-current="true"/, last_response.body)
+      assert_match(%r{href="/events\?view=calendar"[^>]*data-view="calendar"}, last_response.body)
+      # The list view keeps the standard-width layout.
+      refute_includes last_response.body, %(<body class="wide">)
+    end
+
+    def test_index_renders_calendar_view_when_requested
+      @fake_calendar.events_to_return = [
+        event_view(summary: "Town Meeting"),
+        # An event on today itself, so today's month grid (and the cal-today
+        # cell) renders even when tomorrow falls in the next month.
+        event_view(summary: "Coffee Hour", start: Time.now)
+      ]
+      get "/events", { "view" => "calendar" }
+      assert_equal 200, last_response.status
+      assert_includes events_region, %(<table class="cal-month">)
+      assert_includes events_region, "Town Meeting"
+      refute_includes events_region, %(<ul class="events">)
+      assert_match(/data-view="calendar"[^>]*aria-current="true"/, last_response.body)
+      # The event lands on tomorrow's grid, and today's cell is highlighted.
+      tomorrow = (Time.now + 86_400).strftime("%B %Y")
+      assert_includes last_response.body, "#{tomorrow}</caption>"
+      assert_includes last_response.body, %(class="cal-day cal-today")
+      # The month grid gets the wide layout.
+      assert_includes last_response.body, %(<body class="wide">)
+    end
+
+    def test_calendar_view_is_preserved_in_filter_urls
+      get "/events", { "view" => "calendar", "source" => "lwv" }
+      assert_equal 200, last_response.status
+      # Source toggle links and the search form keep the calendar view.
+      assert_match(/href="[^"]*view=calendar[^"]*"[^>]*data-source="lwv"/, last_response.body)
+      assert_includes last_response.body, %(<input type="hidden" name="view" value="calendar">)
+      # The list toggle link drops the param but keeps the source.
+      assert_match(%r{href="/events\?source=lwv"[^>]*data-view="list"}, last_response.body)
+    end
+
+    def test_events_fragment_renders_calendar_for_fetch_requests
+      @fake_calendar.events_to_return = [event_view(summary: "Town Meeting")]
+      get "/events", { "view" => "calendar" }, { "HTTP_X_REQUESTED_WITH" => "fetch" }
+      assert_equal 200, last_response.status
+      assert_includes last_response.body, %(<table class="cal-month">)
+      # The fragment has no page chrome around it.
+      refute_includes last_response.body, "<html"
+      refute_includes last_response.body, "data-filters"
+    end
+
+    def test_calendar_view_shows_times_source_colors_and_overflow
+      base = Time.now + 86_400
+      @fake_calendar.events_to_return = Array.new(6) { |i| event_view(summary: "Meeting #{i}", start: base) }
+      get "/events", { "view" => "calendar" }
+      assert_equal 200, last_response.status
+      # Each visible event carries its source color and a compact time; fake
+      # events have no source, so they take the community navy.
+      assert_includes events_region, "--event-color: #1c478e"
+      assert_includes events_region, %(<span class="cal-event-time">)
+      # Six same-day events collapse to three plus a "+3 more" list link.
+      assert_equal 3, events_region.scan("cal-event-time").length
+      assert_match(%r{<p class="cal-more"><a href="/events">\+3 more</a></p>}, events_region)
+    end
+
+    def test_calendar_view_spans_multi_day_events
+      from = Date.today + 7
+      @fake_calendar.events_to_return = [all_day_event_view(summary: "Art Festival", from: from, days: 3)]
+      get "/events", { "view" => "calendar" }
+      assert_equal 200, last_response.status
+      assert_includes events_region, "Art Festival"
+      # One bar segment per covered day, joined across the cells.
+      assert_equal 3, events_region.scan(%(<p class="cal-span)).length
+    end
+
+    def test_calendar_view_renders_friendly_error_on_calendar_failure
+      @fake_calendar.list_error = Google::Apis::ServerError.new("boom")
+      get "/events", { "view" => "calendar" }
+      assert_equal 200, last_response.status
+      assert_includes last_response.body, "trouble loading events"
+    end
+
     def test_index_renders_friendly_error_on_calendar_failure
       @fake_calendar.list_error = Google::Apis::ServerError.new("boom")
       get "/events"
@@ -355,14 +440,20 @@ module NeedhamCircle
       (Time.now + hours_ahead * 3600).strftime("%Y-%m-%dT%H:%M")
     end
 
-    def event_view(summary:, location: nil, description: nil, email: nil)
+    # The rendered events region, without the rest of the page — the skeleton
+    # templates further down legitimately contain both views' markup.
+    def events_region
+      last_response.body.split("<div data-events>").last.split("<template").first
+    end
+
+    def event_view(summary:, location: nil, description: nil, email: nil, start: Time.now + 86_400)
       google_event =
         Google::Apis::CalendarV3::Event.new(
           summary: summary,
           location: location,
           description: description,
-          start: Google::Apis::CalendarV3::EventDateTime.new(date_time: Time.now + 86_400),
-          end: Google::Apis::CalendarV3::EventDateTime.new(date_time: Time.now + 90_000)
+          start: Google::Apis::CalendarV3::EventDateTime.new(date_time: start),
+          end: Google::Apis::CalendarV3::EventDateTime.new(date_time: start + 3600)
         )
 
       if email
@@ -372,7 +463,19 @@ module NeedhamCircle
           )
       end
 
-      GoogleCalendar::EventView.new(google_event, GoogleCalendar::EventDateTimeFormatter.new)
+      GoogleCalendar::EventView.for(google_event)
+    end
+
+    def all_day_event_view(summary:, from:, days:)
+      google_event =
+        Google::Apis::CalendarV3::Event.new(
+          summary: summary,
+          start: Google::Apis::CalendarV3::EventDateTime.new(date: from),
+          # Google all-day end dates are exclusive.
+          end: Google::Apis::CalendarV3::EventDateTime.new(date: from + days)
+        )
+
+      GoogleCalendar::EventView.for(google_event)
     end
   end
 end
