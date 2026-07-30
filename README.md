@@ -17,7 +17,7 @@ The function URLs live in `_config.yml` (`events_endpoint`, `submit_endpoint`,
 ## Development
 
 Terminal 1 — the functions devserver, from a checkout of
-needham-circle/functions (see its README for the env vars):
+needhamcircle/functions (see its README for the env vars):
 
 ```
 cd ../functions
