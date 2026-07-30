@@ -3,7 +3,7 @@
 # community submissions), and color identifies the source in the calendar
 # view (always with the title alongside — color never carries the identity
 # alone). The values must stay in step with the source list in the
-# needham-circle/ingest repo.
+# needhamcircle/ingest repo.
 - slug: community
   label: Community Submissions
   value: ""

@@ -1,5 +1,5 @@
 # Local-development overrides: point the site at the functions devserver from
-# the needham-circle/functions repo (`PORT=8081 go run ./cmd/devserver`).
+# the needhamcircle/functions repo (`PORT=8081 go run ./cmd/devserver`).
 # Use with:
 #
 #   bundle exec jekyll serve --config _config.yml,_config_local.yml
