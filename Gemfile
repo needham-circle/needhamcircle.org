@@ -1,15 +1,6 @@
+# frozen_string_literal: true
+
 source "https://rubygems.org"
 
-ruby ">= 3.0"
-
-gem "erubi"
-gem "google-apis-calendar_v3"
-gem "googleauth"
-gem "icalendar"
-gem "mail"
-gem "minitest"
-gem "puma"
-gem "rack-test"
-gem "rackup"
-gem "rake"
-gem "sinatra"
+gem "jekyll"
+gem "webrick"

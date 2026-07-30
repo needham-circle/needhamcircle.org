@@ -1,0 +1,25 @@
+# The static Needham Circle site, served by GitHub Pages. The dynamic pieces
+# (events data, the submit and contact forms) talk to the Cloud Run functions
+# in the needham-circle/functions repo from the browser.
+title: Needham Circle
+
+# The deployed function URLs the site's JS calls. Fill these in after
+# deploying each function (see the needham-circle/functions repo);
+# _config_local.yml overrides them to point at its devserver for local
+# development.
+events_endpoint: ""
+submit_endpoint: ""
+contact_endpoint: ""
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: "default"
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - vendor
+  - _config_local.yml

@@ -1,0 +1,54 @@
+# The event sources: slug is the URL parameter, value is what the ingest
+# sync stamps into each event's private "source" property (empty for
+# community submissions), and color identifies the source in the calendar
+# view (always with the title alongside — color never carries the identity
+# alone). The values must stay in step with the source list in the
+# needham-circle/ingest repo.
+- slug: community
+  label: Community Submissions
+  value: ""
+  color: "#1c478e"
+- slug: green-needham
+  label: Green Needham
+  value: green-needham
+  color: "#187a4e"
+- slug: lwv
+  label: League of Women Voters
+  value: lwv-needham
+  color: "#2b689e"
+- slug: lets-bike
+  label: Let's Bike Needham
+  value: lets-bike-needham
+  color: "#8f3d5e"
+- slug: concert-society
+  label: Needham Concert Society
+  value: needham-concert-society
+  color: "#52489f"
+- slug: needham-farm
+  label: Needham Farm
+  value: needham-farm
+  color: "#74491e"
+- slug: history
+  label: Needham History Center
+  value: needham-history
+  color: "#9e3b3b"
+- slug: observer
+  label: Needham Observer
+  value: needham-observer
+  color: "#047d80"
+- slug: schools-arts
+  label: NPS Fine & Performing Arts
+  value: needham-schools-arts
+  color: "#6d2d7d"
+- slug: rotary
+  label: Rotary Club
+  value: needham-rotary
+  color: "#92610e"
+- slug: town
+  label: Town of Needham
+  value: needham-gov
+  color: "#9c4a1f"
+- slug: volante-farms
+  label: Volante Farms
+  value: volante-farms
+  color: "#5e7014"

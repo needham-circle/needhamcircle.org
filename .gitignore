@@ -1,3 +1,6 @@
-.env
+_site/
+.claude/
+.jekyll-cache/
 .bundle/
-vendor/bundle/
+vendor/
+.env

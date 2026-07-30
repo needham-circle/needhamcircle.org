@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ page.title }}</title>
+    <meta name="description" content="{{ page.description }}">
+    <meta name="theme-color" content="#1c478e">
+
+    <link rel="icon" type="image/svg+xml" href="{{ '/img/needham-circle.svg' | relative_url }}">
+    <link rel="canonical" href="{{ page.url | absolute_url }}">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Needham Circle">
+    <meta property="og:title" content="{{ page.title }}">
+    <meta property="og:description" content="{{ page.description }}">
+    <meta property="og:url" content="{{ page.url | absolute_url }}">
+    <meta property="og:image" content="{{ '/img/needham-circle.svg' | absolute_url }}">
+
+    <meta name="twitter:card" content="summary_large_image">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ '/css/style.css' | relative_url }}">
+  </head>
+  <body{% if page.wide %} class="wide"{% endif %}>
+    <header class="site-header">
+      <div class="container site-header-inner">
+        <a class="site-brand" href="{{ '/' | relative_url }}"{% if page.url == "/" %} aria-current="page"{% endif %}>
+          <svg class="logo" viewBox="0 0 100 100" aria-hidden="true" style="--dark-blue:#294982;--light-blue:#8db8dd">
+            <rect width="100" height="100" rx="5" fill="var(--dark-blue)" />
+
+            <g fill="white">
+              <circle cx="50" cy="50" r="40" />
+              <circle cx="50" cy="12" r="9" />
+              <circle cx="88" cy="50" r="9" />
+              <circle cx="12" cy="50" r="9" />
+              <rect x="40" width="20" y="84" height="14" rx="4" />
+            </g>
+
+            <defs>
+              <g id="figure">
+                <circle cx="50" cy="12" r="4.5" fill="var(--light-blue)" stroke="var(--dark-blue)" stroke-width="2" />
+                <path d="M 33 26 A 27 27 0 0 1 67 26" fill="none" stroke="var(--dark-blue)" stroke-width="9" stroke-linecap="round" />
+                <path d="M 33 26 A 27 27 0 0 1 67 26" fill="none" stroke="var(--light-blue)" stroke-width="4" stroke-linecap="round" />
+                <path d="M 44 22 L 45 32 A 27 27 0 0 1 55 32 L 56 22 Z" fill="var(--light-blue)" />
+                <line x1="44" y1="23.8" x2="45" y2="31" stroke="var(--dark-blue)" stroke-width="2" stroke-linecap="round" />
+                <line x1="55" y1="31" x2="56" y2="23.8" stroke="var(--dark-blue)" stroke-width="2" stroke-linecap="round" />
+              </g>
+            </defs>
+
+            <g class="figure" style="animation-delay:0s"><use href="#figure" /></g>
+            <g transform="rotate(90 50 50)"><g class="figure" style="animation-delay:.12s"><use href="#figure" /></g></g>
+            <g transform="rotate(270 50 50)"><g class="figure" style="animation-delay:.24s"><use href="#figure" /></g></g>
+
+            <g class="figure figure-bottom" style="animation-delay:.18s">
+              <circle cx="50" cy="72" r="4.5" fill="var(--light-blue)" stroke="var(--dark-blue)" stroke-width="2"/>
+              <path d="M 67 74 A 27 27 0 0 1 33 74" fill="none" stroke="var(--dark-blue)" stroke-width="9" stroke-linecap="round" />
+              <path d="M 67 74 A 27 27 0 0 1 33 74" fill="none" stroke="var(--light-blue)" stroke-width="4" stroke-linecap="round" />
+              <rect x="45" y="79" width="10" height="15.5" rx="1" fill="var(--light-blue)" />
+              <line x1="45" y1="83.1" x2="45" y2="93" stroke="var(--dark-blue)" stroke-width="3" stroke-linecap="round" />
+              <line x1="55" y1="83.1" x2="55" y2="93" stroke="var(--dark-blue)" stroke-width="3" stroke-linecap="round" />
+            </g>
+          </svg>
+          <hgroup>
+            <h1>Needham Circle</h1>
+            <p class="tagline">Building a more connected community</p>
+          </hgroup>
+        </a>
+      </div>
+    </header>
+
+    <nav class="site-nav" aria-label="Primary">
+      <ul class="container">
+        <li><a href="{{ '/about' | relative_url }}"{% if page.url == "/about" %} aria-current="page"{% endif %}>About</a></li>
+        <li><a href="{{ '/events' | relative_url }}"{% if page.url == "/events" %} aria-current="page"{% endif %}>Events</a></li>
+        <li><a href="{{ '/submit' | relative_url }}"{% if page.url == "/submit" %} aria-current="page"{% endif %}>Submit</a></li>
+        <li><a href="{{ '/resources' | relative_url }}"{% if page.url == "/resources" %} aria-current="page"{% endif %}>Resources</a></li>
+        <li><a href="{{ '/contact' | relative_url }}"{% if page.url == "/contact" %} aria-current="page"{% endif %}>Contact</a></li>
+      </ul>
+    </nav>
+
+    <div class="container">
+      <main>
+        {{ content }}
+      </main>
+    </div>
+    <script src="{{ '/js/logo.js' | relative_url }}" defer></script>
+  </body>
+</html>

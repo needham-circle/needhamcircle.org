@@ -1,6 +1,0 @@
-<% tooltip = "#{event.title} — #{event.formatted_starts_at}" %>
-<% if event.url %>
-  <a href="<%= event.url %>" target="_blank" rel="noopener noreferrer" title="<%= tooltip %>"><%= event.title %></a>
-<% else %>
-  <span title="<%= tooltip %>"><%= event.title %></span>
-<% end %>

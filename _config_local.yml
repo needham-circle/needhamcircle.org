@@ -1,0 +1,8 @@
+# Local-development overrides: point the site at the functions devserver from
+# the needham-circle/functions repo (`PORT=8081 go run ./cmd/devserver`).
+# Use with:
+#
+#   bundle exec jekyll serve --config _config.yml,_config_local.yml
+events_endpoint: "http://localhost:8081/list-events"
+submit_endpoint: "http://localhost:8081/create-submission"
+contact_endpoint: "http://localhost:8081/send-contact"
